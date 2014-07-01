@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 module AuthorizeNet::Reporting
 
   # The CIM response class.
   class Response < AuthorizeNet::XmlResponse
-    
+
     include AuthorizeNet::CIM::Fields
-    
+
     # Constructs a new response object from raw_response in the context of transaction.
     # You don‘t typically construct this object yourself, as AuthorizeNet::Reeporting::Transaction
     # will build one for you when it makes the request to the gateway.
@@ -20,8 +21,8 @@ module AuthorizeNet::Reporting
         end
       end
     end
-    
-    
+
+
     # Returns an Array of Batch objects built from the entities returned in the response. Returns nil if no batchList was returned.
     def batch_list
       unless @batch_list.nil?
@@ -32,7 +33,7 @@ module AuthorizeNet::Reporting
         return batches unless batches.length == 0
       end
     end
-    
+
     # Returns an Array of TransactionDetail objects built from the entities returned in the response. Returns nil if no transactions were returned.
     def transactions
       unless @transactions.nil?
@@ -40,7 +41,7 @@ module AuthorizeNet::Reporting
         @transactions.element_children.each do |child|
           unless child.nil?
             transaction = build_entity(child, Fields::TRANSACTION_DETAILS_ENTITY_DESCRIPTION)
-            
+
             # handle some stuff thats too tricky for EntityDecription to handle
              first_name = node_content_unless_nil(child.at_css('firstName'))
             last_name = node_content_unless_nil(child.at_css('lastName'))
@@ -58,33 +59,33 @@ module AuthorizeNet::Reporting
         return transactions unless transactions.length == 0
       end
     end
-    
+
     # Builds and returns a TransactionDetail entity built from the response. If no transaction was found, returns nil.
     def transaction
       unless @transaction.nil?
         transaction = build_entity(@transaction, Fields::TRANSACTION_DETAILS_ENTITY_DESCRIPTION)
-        
+
         ip = node_content_unless_nil(@transaction.at_css('customerIP'))
         unless ip.nil?
           transaction.customer ||= AuthorizeNet::CIM::CustomerProfile.new()
           transaction.customer.ip = ip
         end
-        
+
         tax_exempt = node_content_unless_nil(@transaction.at_css('taxExempt'))
         unless tax_exempt.nil?
           transaction.order ||= AuthorizeNet::Order.new()
           transaction.order.tax_exempt = value_to_boolean(tax_exempt)
         end
-        
+
         tax = @transaction.at_css('tax')
         unless tax.nil?
           transaction.order ||= AuthorizeNet::Order.new()
           tax_amount = node_content_unless_nil(tax.at_css('amount'))
-          transaction.order.tax_amount = value_to_decimal(tax_amount) unless tax_amount.nil?
+          transaction.order.tax = value_to_decimal(tax_amount) unless tax_amount.nil?
           transaction.order.tax_name = node_content_unless_nil(tax.at_css('name'))
           transaction.order.tax_description = node_content_unless_nil(tax.at_css('description'))
         end
-        
+
         shipping = @transaction.at_css('shipping')
         unless shipping.nil?
           transaction.order ||= AuthorizeNet::Order.new()
@@ -93,7 +94,7 @@ module AuthorizeNet::Reporting
           transaction.order.shipping_name = node_content_unless_nil(shipping.at_css('name'))
           transaction.order.shipping_description = node_content_unless_nil(shipping.at_css('description'))
         end
-        
+
         duty = @transaction.at_css('duty')
         unless duty.nil?
           transaction.order ||= AuthorizeNet::Order.new()
@@ -102,7 +103,7 @@ module AuthorizeNet::Reporting
           transaction.order.duty_name = node_content_unless_nil(duty.at_css('name'))
           transaction.order.duty_description = node_content_unless_nil(duty.at_css('description'))
         end
-        
+
         line_items = @transaction.at_css('lineItems')
         unless line_items.nil?
           transaction.order ||= AuthorizeNet::Order.new()
@@ -111,7 +112,7 @@ module AuthorizeNet::Reporting
             transaction.order.add_line_item(line_item)
           end
         end
-        
+
         # Really not sure what to do with customer type here. It should go on a payment
         customer_type = node_content_unless_nil(@transaction.at_css('customer type'))
         unless customer_type.nil?
@@ -148,6 +149,6 @@ module AuthorizeNet::Reporting
         return transaction
       end
     end
-    
+
   end
 end
