@@ -1,12 +1,12 @@
 module AuthorizeNet
-  
+
   # Models an order.
   class Order
-    
+
     include AuthorizeNet::Model
-    
-    attr_accessor :invoice_num, :description, :tax, :tax_name, :tax_description, :freight, :freight_name, :freight_description, :duty, :duty_name, :duty_description, :tax_exempt, :po_num, :line_items
-    
+
+    attr_accessor :invoice_num, :description, :tax, :tax_name, :tax_description, :freight, :freight_name, :freight_description, :duty, :duty_name, :duty_description, :tax_exempt, :po_num, :line_items, :shipping_amount, :shipping_name, :shipping_description
+
     def add_line_item(id = nil, name = nil, description = nil, quantity = nil, price = nil, taxable = nil)
       if id.kind_of?(AuthorizeNet::LineItem)
         line_item = id
@@ -15,7 +15,7 @@ module AuthorizeNet
       end
       @line_items = @line_items.to_a << line_item
     end
-    
+
     def to_hash
       hash = {
         :invoice_num => @invoice_num,
@@ -36,7 +36,7 @@ module AuthorizeNet
       hash.delete_if {|k, v| v.nil?}
       hash
     end
-    
+
   end
-  
+
 end
